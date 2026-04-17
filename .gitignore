@@ -1,0 +1,33 @@
+# dependencies
+/node_modules
+
+# production
+/dist
+/build
+/.vite
+
+# environment variables
+.env
+.env.local
+.env.*
+
+# logs
+/logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+.vscode
+
+# testing
+/coverage
+/jest
+/nyc_output
+
