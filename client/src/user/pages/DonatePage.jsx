@@ -1,0 +1,127 @@
+import { useRef, useState, useEffect, useContext } from 'react'
+import { FaArrowRight } from "react-icons/fa";
+import CampaignCard from '../components/CampaignCard'
+import { CampaignContext } from "../../context/CampaignContext";
+import Pagination from '../components/Pagination'
+import { useNavigate } from 'react-router-dom'
+import useDebounce from '../../hooks/useDebounce';
+import axios from 'axios';
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
+
+const DonatePage = ({ search }) => {
+  const { campaigns } = useContext(CampaignContext);
+
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const paymentSectionRef = useRef(null);
+  const navigate = useNavigate();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  const currentCampaigns = campaigns.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(campaigns.length / itemsPerPage);
+
+  // Search results state
+  const [results, setResults] = useState([]);
+
+  // Use debounce for search input to avoid excessive API calls with the help of useDebounce custom hook
+  const debouncedSearch = useDebounce(search, 1000);
+
+  // Fetch search results when search query changes
+  useEffect(() => {
+    // If search query is empty, clear results and return early
+    if (!debouncedSearch.trim()) {
+      setResults([]);
+      return;
+    }
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`${SERVER_URL}/api/campaigns/search?q=${debouncedSearch}`);
+        setResults(res.data.data);
+        console.log("Search results:", res.data.data);
+      } catch (error) {
+        console.error("Error fetching search results:", error);
+        setResults([]);
+      }
+    };
+    fetchData();
+  }, [debouncedSearch]);
+
+  // // By newest campaigns
+  // const trendingCampaigns = allCampaigns
+  // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  // .slice(0, 3);
+
+  // Scroll to payment section
+  const handleDonateClick = (campaign) => {
+    setSelectedCampaign(campaign);
+    paymentSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
+  // Handle payment amount click
+  const handlePayment = async (amount) => {
+    navigate('/checkout', { state: { campaign: selectedCampaign, amount } });
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-10 px-4 md:px-20 mt-20">
+      <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">
+        Donate Campaigns
+      </h1>
+
+      {/* Campaign Cards */}
+      < section className="max-w-7xl mx-auto py-12 px-4" >
+        <div className="flex justify-between items-center mb-6">
+          <button className="flex items-center gap-2 text-blue-600 ml-auto">
+            View All <FaArrowRight />
+          </button>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {results.length > 0 ? (
+            results.map(campaign => (
+              <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
+            ))
+          ) : (
+            currentCampaigns.map(campaign => (
+              <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
+            ))
+          )}
+        </div>
+      </section >
+
+
+      {/* Pagination Component */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+
+      {/* Payment Section */}
+      <div ref={paymentSectionRef}
+        className="bg-white rounded-xl shadow-md p-6 max-w-xl mx-auto mt-16 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          {selectedCampaign ? `Donate to: ${selectedCampaign.title}` : "Select a campaign"}
+        </h2>
+        <p className="text-gray-600 mb-6">Select an amount to donate:</p>
+        <div className="flex gap-6 justify-center">
+          {[300, 500, 1000].map((amount) => (
+            <button
+              key={amount}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+              onClick={() => handlePayment(amount)}>
+              ₹{amount}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default DonatePage

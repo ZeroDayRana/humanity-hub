@@ -26,6 +26,15 @@ const User = sequelize.define('User', {
     },
     resetTokenExpiry: {
         type: DataTypes.DATE,
+    },
+    role: {
+        type: DataTypes.ENUM('user', 'admin', 'superadmin'),
+        defaultValue: 'user',
+        allowNull: false
+    },
+    status: {
+        type: DataTypes.ENUM('active', 'banned', 'suspended'),
+        defaultValue: 'active'
     }
 }, {
     timestamps: true

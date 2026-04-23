@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { createContext, useState } from "react";
 import axios from "axios";
 // import campaignsData from "../data/campaignsData";
@@ -12,11 +12,8 @@ export const CampaignProvider = (props) => {
 
     //If you want to use the data from the server
     const [campaigns, setCampaigns] = useState([]);
-    const addCampaign = (newCampaign) => setCampaigns((prev) => [...prev, newCampaign]);
-    const deleteCampaign = (campaignId) => setCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
-    const updateCampaign = (updatedCampaign) => setCampaigns((prev) => prev.map((c) => c.id === updatedCampaign.id ? updatedCampaign : c));
     
-    //Fetch data from the server
+    //Fetch campaigns data from the server
     useEffect(() => {
         const fetchCampaigns = async () => {
             try {
@@ -29,10 +26,18 @@ export const CampaignProvider = (props) => {
         }
         fetchCampaigns(); // ✅ call async function
     }, []);
-    const values = { campaigns, setCampaigns, addCampaign, deleteCampaign, updateCampaign };
+    const values = { campaigns, setCampaigns };
     return (
         <CampaignContext.Provider value={values}>
             {props.children}
         </CampaignContext.Provider>
     )
 }
+
+export const useCampaign = () => {
+    const context = useContext(CampaignContext);
+    if (!context) {
+        throw new Error("useCampaign must be used within CampaignProvider");
+    }
+    return context;
+};

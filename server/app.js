@@ -21,7 +21,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/user", userRoutes);
 app.use("/api/campaigns", campaignRoutes);
 app.use("/api/donations", donationRoutes);
-
+app.use("/api/admin", require("./routes/adminRoutes")); // Admin routes
 
 sequelize.sync().then(() => {
     console.log("✅ Database synced (alter mode)");

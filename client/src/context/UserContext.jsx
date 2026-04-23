@@ -7,6 +7,7 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [campaigns, setCampaigns] = useState([]);
     const [loadingUser, setLoadingUser] = useState(true);
 
     // Login function to set user and token
@@ -21,6 +22,7 @@ export const UserProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
+        localStorage.removeItem("userDonatedCampaigns");
     };
 
     // Fetch user profile on mount
@@ -43,12 +45,19 @@ export const UserProvider = ({ children }) => {
                     },
                 });
                 const { name, email } = response.data.data;
+                //camaigns in which user has donated
+                const campaigns = response.data.campaigns || [];
                 setUser({ name, email });
+                setCampaigns(campaigns);
                 localStorage.setItem("user", JSON.stringify({ name, email }));
+                localStorage.setItem("userDonatedCampaigns", JSON.stringify(campaigns));
             } catch (error) {
                 console.error("Error fetching user profile:", error);
-                // If token invalid, logout
-                logout();
+
+                // 🔥 Only logout if token is invalid (401)
+                if (error.response?.status === 401) {
+                    logout();
+                }
             } finally {
                 setLoadingUser(false);
             }
@@ -59,6 +68,7 @@ export const UserProvider = ({ children }) => {
 
     const value = {
         user,
+        campaigns,
         setUser,
         loadingUser,
         login,

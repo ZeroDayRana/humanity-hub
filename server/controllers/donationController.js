@@ -1,6 +1,8 @@
 const { Donation, Campaign } = require('../models/Relationship');
 const sequelize = require('../config/db');
 const { generateSession, verifyPayment } = require('../services/cashfreeService');
+
+// For User
 const createDonation = async (req, res) => {
 
     //dummy data for testing
@@ -99,7 +101,14 @@ const paymentStatus = async (req, res) => {
         // ⚠️ Prevent duplicate processing
         if (donation.paymentStatus === "success") {
             await t.rollback();
-            return res.status(200).json({ message: "Already processed" });
+
+            const campaign = await Campaign.findByPk(donation.campaignId);
+
+            return res.status(200).json({
+                message: "Already processed",
+                paymentStatus: "PAID",
+                campaignStatus: campaign?.isActive ? "Active" : "Completed"
+            });
         }
 
         // ✅ SUCCESS CASE
@@ -134,7 +143,9 @@ const paymentStatus = async (req, res) => {
             await t.commit();
 
             return res.status(200).json({
-                message: "Payment successful & campaign updated"
+                message: "Payment successful & campaign updated",
+                paymentStatus: paymentInfo.order_status,
+                campaignStatus: campaign.isActive ? "Active" : "Completed"
             });
         }
 
@@ -147,13 +158,13 @@ const paymentStatus = async (req, res) => {
 
             await t.commit();
 
-            return res.status(400).json({ message: "Payment failed" });
+            return res.status(400).json({ message: "Payment failed", status: paymentInfo.order_status, campaignStatus: campaign.isActive ? "Active" : "Completed" });
         }
 
         // ⏳ PENDING
         else {
             await t.rollback();
-            return res.status(200).json({ message: "Payment pending" });
+            return res.status(200).json({ message: "Payment pending", status: paymentInfo.order_status, campaignStatus: campaign.isActive ? "Active" : "Completed" });
         }
 
     } catch (err) {
@@ -164,5 +175,18 @@ const paymentStatus = async (req, res) => {
         });
     }
 };
-module.exports = { createDonation, paymentStatus }
 
+// For Admin/SuperAdmin
+const getAllDonations = async (req, res) => {
+    try {
+        const donations = await Donation.findAll({
+            include: [{ model: Campaign, attributes: ['title'] }],
+            order: [['createdAt', 'DESC']]
+        });
+        return res.status(200).json({ success: true, data: donations });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Failed to fetch donations", error: error.message });
+    }
+}
+
+module.exports = { createDonation, paymentStatus, getAllDonations }

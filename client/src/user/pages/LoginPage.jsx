@@ -3,7 +3,7 @@ import { Mail, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from "../context/UserContext";
+import { UserContext } from "../../context/UserContext";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 function LoginPage() {

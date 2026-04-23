@@ -1,10 +1,12 @@
-const { User } = require('../models/Relationship');
+const { User, Campaign, Donation } = require('../models/Relationship');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require("sequelize");
+const sequelize = require('../config/db');
 const crypto = require("crypto");
 // const { sendResetEmail } = require('../services/nodemailerService');
 
+// For User
 const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -27,7 +29,10 @@ const registerUser = async (req, res) => {
         const newUser = await User.create({ name, email, password: hashedPassword });
 
         //5. Generate JWT token
-        const token = jwt.sign({ id: newUser.id, name: newUser.name, email: newUser.email }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign(
+            { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
+            process.env.JWT_SECRET_KEY, { expiresIn: '1h' }
+        );
 
         //6. Send response
         res.status(201).json({ success: true, message: "User registered successfully", data: newUser, token: token });
@@ -58,7 +63,7 @@ const loginUser = async (req, res) => {
         }
 
         //4. Generate JWT token
-        const token = jwt.sign({ id: user.id, name: user.name, email: user.email }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
 
         //5. Send response      
         res.status(200).json({ success: true, message: "User logged in successfully", data: user, token: token });
@@ -79,9 +84,22 @@ const getUserProfile = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
-
+        // 4. Find campaigns and total amount user has donated to
+        const campaigns = await Campaign.findAll({
+            include: {
+                model: Donation,
+                where: { userId },
+                attributes: [],
+            },
+            attributes: [
+                'id',
+                'title',
+                [sequelize.fn('SUM', sequelize.col('Donations.amount')), 'totalDonated']
+            ],
+            group: ['Campaign.id', 'Campaign.title']
+        });
         // 4. Send response
-        return res.status(200).json({ success: true, message: "Profile fetched successfully", data: user });
+        return res.status(200).json({ success: true, message: "Profile fetched successfully", data: user, campaigns: campaigns });
 
     } catch (error) {
         return res.status(500).json({ success: false, message: "Profile fetch failed", error: error.message });
@@ -215,4 +233,294 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, updateUser, deleteUser, forgotPassword, resetPassword };
+// For Admin/SuperAdmin
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.findAll({ attributes: ['id', 'name', 'email', 'role'] });
+        return res.status(200).json({ success: true, data: users });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Failed to fetch users", error: error.message });
+    }
+}
+
+const makeAdmin = async (req, res) => {
+    try {
+        // Get user id from params users/:id/make-admin
+        const { id } = req.params;
+
+        // Prevent self role change 
+        if (req.user.id == Number(id)) {
+            return res.status(400).json({
+                message: "You cannot change your own role"
+            });
+        }
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(400).json({ message: "User already admin" });
+        }
+
+        user.role = 'admin';
+        await user.save();
+
+        res.json({ message: "User promoted to admin" });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Error promoting user",
+            error: error.message
+        });
+    }
+};
+
+const removeAdmin = async (req, res) => {
+    try {
+        // Get user id from params users/:id/remove-admin
+        const { id } = req.params;
+
+        // Prevent self role change
+        if (req.user.id == Number(id)) {
+            return res.status(400).json({
+                message: "You cannot change your own role"
+            });
+        }
+
+        // Prevent removing last admin
+        const adminCount = await User.count({ where: { role: 'admin' } });
+
+        if (adminCount <= 1) {
+            return res.status(400).json({
+                message: "Cannot remove the last admin"
+            });
+        }
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.role === 'user') {
+            return res.status(400).json({ message: "User is not an admin" });
+        }
+
+        user.role = 'user';
+        await user.save();
+
+        res.json({ message: "Admin role removed" });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Error removing admin",
+            error: error.message
+        });
+    }
+};
+
+const banUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Only superadmin can ban
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({
+                message: "Only superadmin can ban users"
+            });
+        }
+
+        // Prevent self-ban
+        if (req.user.id == Number(id)) {
+            return res.status(400).json({
+                message: "You cannot ban yourself"
+            });
+        }
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // Optional safety
+        if (user.role === 'superadmin') {
+            return res.status(400).json({
+                message: "Cannot ban another superadmin"
+            });
+        }
+
+        if (user.status === 'banned') {
+            return res.status(400).json({
+                message: "User is already banned"
+            });
+        }
+
+        user.status = 'banned';
+        await user.save();
+
+        res.json({
+            message: "User has been banned successfully"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Error banning user",
+            error: error.message
+        });
+    }
+};
+
+const unbanUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({
+                message: "Only superadmin can unban users"
+            });
+        }
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        if (user.status !== 'banned') {
+            return res.status(400).json({
+                message: "User is not banned"
+            });
+        }
+
+        user.status = 'active';
+        await user.save();
+
+        res.json({
+            message: "User has been unbanned successfully"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Error unbanning user",
+            error: error.message
+        });
+    }
+};
+
+const suspendUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Only superadmin
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({
+                message: "Only superadmin can suspend users"
+            });
+        }
+
+        // Prevent self suspend
+        if (req.user.id == Number(id)) {
+            return res.status(400).json({
+                message: "You cannot suspend yourself"
+            });
+        }
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // Prevent suspending superadmin
+        if (user.role === 'superadmin') {
+            return res.status(400).json({
+                message: "Cannot suspend another superadmin"
+            });
+        }
+
+        if (user.status === 'suspended') {
+            return res.status(400).json({
+                message: "User is already suspended"
+            });
+        }
+
+        user.status = 'suspended';
+        await user.save();
+
+        res.json({
+            message: "User has been suspended"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Error suspending user",
+            error: error.message
+        });
+    }
+};
+
+const unsuspendUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({
+                message: "Only superadmin can unsuspend users"
+            });
+        }
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        if (user.status !== 'suspended') {
+            return res.status(400).json({
+                message: "User is not suspended"
+            });
+        }
+
+        user.status = 'active';
+        await user.save();
+
+        res.json({
+            message: "User has been unsuspended"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Error unsuspending user",
+            error: error.message
+        });
+    }
+};
+
+module.exports = {
+    registerUser,
+    loginUser,
+    getUserProfile,
+    updateUser,
+    deleteUser,
+    forgotPassword,
+    resetPassword,
+    getAllUsers,
+    makeAdmin,
+    removeAdmin,
+    banUser,
+    unbanUser,
+    suspendUser,
+    unsuspendUser
+};

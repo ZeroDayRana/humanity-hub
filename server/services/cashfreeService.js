@@ -24,7 +24,7 @@ const generateSession = async ({
             customer_phone: customerPhone
         },
         order_meta: {
-            return_url: `${process.env.SERVER_BASE_URL}/api/donations/payment-status/${orderId}`, // after payment, redirect to this url
+            return_url: `${process.env.CLIENT_URL}/payment-status/${orderId}`, // after payment, redirect to this url
         }
     }
     try {

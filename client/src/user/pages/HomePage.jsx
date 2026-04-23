@@ -3,9 +3,9 @@ import Hero from '../components/Hero'
 import Features from '../components/Features'
 import Carousel from '../components/Carousel'
 import CampaignCard from '../components/CampaignCard'
-import { CampaignContext } from "../context/CampaignContext";
+import { CampaignContext } from "../../context/CampaignContext";
 import axios from 'axios';
-import useDebounce from '../hooks/useDebounce';
+import useDebounce from '../../hooks/useDebounce';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 

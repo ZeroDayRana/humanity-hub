@@ -1,6 +1,9 @@
 const { Op } = require("sequelize");
 const { Campaign } = require("../models/Relationship");
+const fs = require("fs");
+const path = require("path");
 
+// For Admin/SuperAdmin
 const newCampaign = async (req, res) => {
     try {
         const { title, description, goal, image } = req.body;
@@ -19,36 +22,12 @@ const newCampaign = async (req, res) => {
 
         // Create new campaign
         const campaign = await Campaign.create({ title, description, goal, image: imagePath });
+
         console.log("Saved:", campaign);
         res.status(201).json({ success: true, message: "Campaign created successfully", data: campaign });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ success: false, message: "Campaign creation failed", error: error.message });
-    }
-}
-
-const allCampaigns = async (req, res) => {
-    try {
-        const campaigns = await Campaign.findAll({ order: [['createdAt', 'DESC']] });
-        return res.status(200).json({ success: true, data: campaigns });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: "Failed to fetch campaigns", error: error.message });
-    }
-}
-
-const singleCampaign = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const campaign = await Campaign.findByPk(id);
-
-        if (!campaign) {
-            return res.status(404).json({ success: false, message: "Campaign not found"});
-        }
-        return res.status(200).json({ success: true, data: campaign });
-
-    } catch (error) {
-        return res.status(500).json({ success: false, message: "Failed to fetch campaign", error: error.message });
     }
 }
 
@@ -76,6 +55,16 @@ const updateCampaign = async (req, res) => {
             return res.status(400).json({ success: false, message: "Goal must be > 0" });
         }
 
+        // Handle image upload
+        if (req.file) {
+            // delete old image if exists
+            if (campaign.image) {
+                fs.unlinkSync(campaign.image); 
+            }
+            // save new image path
+            updateData.image = req.file.path; // multer से image path मिलेगा
+        }
+
         // 4. Update campaign to database
         await campaign.update(updateData);
 
@@ -93,12 +82,45 @@ const deleteCampaign = async (req, res) => {
         if (!deleted) {
             return res.status(404).json({ success: false, message: "Campaign not found" });
         }
+
+        // delete image if exists
+        const campaign = await Campaign.findByPk(id);
+        if (campaign.image) {
+            fs.unlinkSync(campaign.image);
+        }
+
         return res.status(200).json({ success: true, message: "Campaign deleted successfully" });
 
     } catch (error) {
         res.status(500).json({ success: false, message: "Failed to delete campaign", error: error.message, });
     }
 };
+
+// For User
+const allCampaigns = async (req, res) => {
+    try {
+        const campaigns = await Campaign.findAll({ order: [['createdAt', 'DESC']] });
+        return res.status(200).json({ success: true, data: campaigns });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Failed to fetch campaigns", error: error.message });
+    }
+}
+
+const singleCampaign = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const campaign = await Campaign.findByPk(id);
+
+        if (!campaign) {
+            return res.status(404).json({ success: false, message: "Campaign not found"});
+        }
+        return res.status(200).json({ success: true, data: campaign });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Failed to fetch campaign", error: error.message });
+    }
+}
 
 
 const searchCampaigns = async (req, res) => {

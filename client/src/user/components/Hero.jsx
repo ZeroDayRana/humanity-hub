@@ -8,11 +8,11 @@ const Hero = () => {
                 Raise Funds for What Matters ❤️
             </h2>
             <p className="text-lg mb-6">
-                Start a fundraiser in minutes and make a real difference.
+                Create a campaign in minutes and make a real difference.
             </p>
             <Link to="/create-campaign">
                 <button className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 mx-auto hover:bg-blue-700">
-                    <FaDonate /> Start a Fundraiser
+                    <FaDonate />Create Campaign
                 </button>
             </Link>
         </section>

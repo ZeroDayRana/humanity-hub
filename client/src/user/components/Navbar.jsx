@@ -3,10 +3,11 @@ import { FaHeart } from "react-icons/fa";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { Link, NavLink } from 'react-router-dom';
 import ProfileSideBar from './ProfileSideBar'
-import { UserContext } from '../context/UserContext';
+import { UserContext } from '../../context/UserContext';
+import ThemeToggle from "../../theme/ThemeToggle";
 
 const Navbar = ({ search, setSearch }) => {
-  const { user, loadingUser, logout } = useContext(UserContext);
+  const { user, campaigns, loadingUser, logout } = useContext(UserContext);
   const [showSearch, setShowSearch] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -31,9 +32,9 @@ const Navbar = ({ search, setSearch }) => {
   }, [isSidebarOpen]);
 
   return (
-    <div className="bg-gray-50 text-gray-800">
+    <div className="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
       {/* HEADER */}
-      <header className="bg-white shadow-md fixed w-full top-0 z-50">
+      <header className="bg-white dark:bg-gray-800 shadow-md fixed w-full top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center p-4">
 
           {/* Logo */}
@@ -45,13 +46,14 @@ const Navbar = ({ search, setSearch }) => {
 
           {/* Nav */}
           <nav className="flex gap-6 items-center">
-            <NavLink to="/donate" className="hover:text-blue-500">Donate</NavLink>
-            <NavLink to="/dashboard" className="hover:text-blue-500">Dashboard</NavLink>
-            <NavLink to="/create-campaign" className="hover:text-blue-500">Start Fundraiser</NavLink>
+            <ThemeToggle />
+            <NavLink to="/donate" className="hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400">Donate</NavLink>
+            <NavLink to="/create-campaign" className="hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400">Create Campaign</NavLink>
+            <NavLink to="/admin/dashboard" className="hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400">Admin</NavLink>
 
             {/* Search */}
             <button onClick={() => setShowSearch(!showSearch)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center gap-2">
+              className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center gap-2 transition-colors">
               {showSearch ? <FaTimes /> : <FaSearch />}
               {showSearch ? "Close" : "Search"}
             </button>
@@ -62,7 +64,7 @@ const Navbar = ({ search, setSearch }) => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             )}
 
@@ -75,7 +77,7 @@ const Navbar = ({ search, setSearch }) => {
               </div>
             ) : (
               <Link to="/login">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700">
+                <button className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors">
                   Login
                 </button>
               </Link>
@@ -86,10 +88,10 @@ const Navbar = ({ search, setSearch }) => {
 
       {/* Overlay for sidebar covers the whole screen under the sidebar */}
       {isSidebarOpen && (
-        <div onClick={closeSidebar} className="fixed inset-0 bg-black/30 z-40 transition-opacity duration-300" />)}
+        <div onClick={closeSidebar} className="fixed inset-0 bg-black/30 dark:bg-black/50 z-40 transition-opacity duration-300" />)}
 
       {/* Sidebar ALWAYS rendered */}
-      <ProfileSideBar user={user} isOpen={isSidebarOpen} closeSidebar={closeSidebar} logout={logout} />
+      <ProfileSideBar user={user} campaigns={campaigns} isOpen={isSidebarOpen} closeSidebar={closeSidebar} logout={logout} />
 
     </div>
   )
