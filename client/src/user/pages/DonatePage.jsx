@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from 'react'
+import { useRef, useState, useEffect, useContext, use } from 'react'
 import { FaArrowRight } from "react-icons/fa";
 import CampaignCard from '../components/CampaignCard'
 import { CampaignContext } from "../../context/CampaignContext";
@@ -10,43 +10,79 @@ import axios from 'axios';
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const DonatePage = ({ search }) => {
-  const { campaigns } = useContext(CampaignContext);
+  const { campaigns, setCampaigns } = useContext(CampaignContext);
 
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const paymentSectionRef = useRef(null);
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 6;
 
-  // Pagination Logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  // ------------------------------------------------------------------------------------------
+  // Pagination Logic when only client side pagination is used
+  // const indexOfLastItem = currentPage * itemsPerPage;
+  // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
-  const currentCampaigns = campaigns.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(campaigns.length / itemsPerPage);
+  // const currentCampaigns = campaigns.slice(indexOfFirstItem, indexOfLastItem);
+  // const totalPages = Math.ceil(campaigns.length / itemsPerPage);
+  // ------------------------------------------------------------------------------------------
 
   // Search results state
-  const [results, setResults] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
 
   // Use debounce for search input to avoid excessive API calls with the help of useDebounce custom hook
   const debouncedSearch = useDebounce(search, 1000);
+
+  // Fetch campaigns for current page when page changes - only when pagination is handled in server side
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const res = await axios.get(`${SERVER_URL}/api/campaigns?page=${currentPage}&limit=${itemsPerPage}`);
+
+        const totalPages = res.data.totalPages;
+
+        // If current page exceeds total pages (can happen if items are deleted), reset to last page
+        if (currentPage > totalPages && totalPages > 0) {
+          setCurrentPage(Math.max(1, totalPages)); // reset to last page if current page exceeds total pages
+          return;
+        }
+
+        // If no campaigns found, set to empty array to avoid errors in rendering
+        if (res.data.data.length === 0) {
+          setCampaigns([]); // No campaigns found, set to empty array
+          return;
+        }
+        console.log("Fetched campaigns:", res.data.data);
+        console.log("Total pages:", totalPages);
+        setCampaigns(res.data.data);
+        setTotalPages(totalPages);
+
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+        setCampaigns([]);
+        setTotalPages(1);
+      }
+    };
+    fetchCampaigns();
+  }, [currentPage]);
 
   // Fetch search results when search query changes
   useEffect(() => {
     // If search query is empty, clear results and return early
     if (!debouncedSearch.trim()) {
-      setResults([]);
+      setSearchResults([]);
       return;
     }
     const fetchData = async () => {
       try {
         const res = await axios.get(`${SERVER_URL}/api/campaigns/search?q=${debouncedSearch}`);
-        setResults(res.data.data);
+        setSearchResults(res.data.data);
         console.log("Search results:", res.data.data);
       } catch (error) {
         console.error("Error fetching search results:", error);
-        setResults([]);
+        setSearchResults([]);
       }
     };
     fetchData();
@@ -82,14 +118,26 @@ const DonatePage = ({ search }) => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {results.length > 0 ? (
-            results.map(campaign => (
-              <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
+          {searchResults.length > 0 ? (
+            searchResults.map(campaign => (
+              <CampaignCard
+                key={campaign.id}
+                campaign={campaign}
+                onDonateClick={handleDonateClick}
+              />
+            ))
+          ) : campaigns.length > 0 ? (
+            campaigns.map(campaign => (
+              <CampaignCard
+                key={campaign.id}
+                campaign={campaign}
+                onDonateClick={handleDonateClick}
+              />
             ))
           ) : (
-            currentCampaigns.map(campaign => (
-              <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
-            ))
+            <p className="text-center text-gray-500 col-span-3">
+              No campaigns found
+            </p>
           )}
         </div>
       </section >
@@ -125,3 +173,4 @@ const DonatePage = ({ search }) => {
 }
 
 export default DonatePage
+

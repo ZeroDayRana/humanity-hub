@@ -33,16 +33,10 @@ const newCampaign = async (req, res) => {
 
 const updateCampaign = async (req, res) => {
     try {
-        const { id } = req.params;
         const updateData = req.body; //new data from user
+        const campaign = req.campaign; // already available
 
-        // 1. Check if campaign exists
-        const campaign = await Campaign.findByPk(id);
-        if (!campaign) {
-            return res.status(404).json({ success: false, message: "Campaign not found" });
-        }
-
-        // 2. Check if update data is valid
+        // Check if update data is valid
         const allowedFields = ["title", "description", "goal", "image"];
         const updates = Object.keys(updateData);
         const isValid = updates.every((field) => allowedFields.includes(field)); // returns true or false
@@ -50,22 +44,28 @@ const updateCampaign = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid update fields" });
         }
 
-        // 3. Check if goal is valid
+        // Check if goal is valid
         if (updateData.goal !== undefined && (isNaN(updateData.goal) || updateData.goal <= 0)) {
             return res.status(400).json({ success: false, message: "Goal must be > 0" });
         }
 
+        if (updates.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No fields provided for update",
+            });
+        }
         // Handle image upload
         if (req.file) {
-            // delete old image if exists
-            if (campaign.image) {
-                fs.unlinkSync(campaign.image); 
+            // delete old image if image path  exists in db and file exists in server storage
+            if (campaign.image  && fs.existsSync(campaign.image)) {
+                fs.unlinkSync(campaign.image);
             }
             // save new image path
             updateData.image = req.file.path; // multer से image path मिलेगा
         }
 
-        // 4. Update campaign to database
+        // Update campaign to database
         await campaign.update(updateData);
 
         return res.status(200).json({ success: true, message: "Campaign updated successfully", data: campaign });
@@ -76,18 +76,14 @@ const updateCampaign = async (req, res) => {
 
 const deleteCampaign = async (req, res) => {
     try {
-        const { id } = req.params;
-        const deleted = await Campaign.destroy({ where: { id } });
+        const campaign = req.campaign; // already available
 
-        if (!deleted) {
-            return res.status(404).json({ success: false, message: "Campaign not found" });
-        }
-
-        // delete image if exists
-        const campaign = await Campaign.findByPk(id);
-        if (campaign.image) {
+       // Delete image safely
+        if (campaign.image && fs.existsSync(campaign.image)) {
             fs.unlinkSync(campaign.image);
         }
+
+        await Campaign.destroy({ where: { id: campaign.id } });
 
         return res.status(200).json({ success: true, message: "Campaign deleted successfully" });
 
@@ -97,10 +93,51 @@ const deleteCampaign = async (req, res) => {
 };
 
 // For User
+
+// ------------------------------------------------------------------------------------------
+// Use when pagination is handlent in client side
+// const allCampaigns = async (req, res) => {
+//     try {
+//         const campaigns = await Campaign.findAll({ order: [['createdAt', 'DESC']] });
+//         return res.status(200).json({ success: true, data: campaigns });
+//     } catch (error) {
+//         return res.status(500).json({ success: false, message: "Failed to fetch campaigns", error: error.message });
+//     }
+// }
+// ------------------------------------------------------------------------------------------
+
+// Use when pagination is handled in server side
+// api/campaigns?page=1&limit=6
 const allCampaigns = async (req, res) => {
     try {
-        const campaigns = await Campaign.findAll({ order: [['createdAt', 'DESC']] });
-        return res.status(200).json({ success: true, data: campaigns });
+        const page = parseInt(req.query.page || 1);
+        const limit = parseInt(req.query.limit || 6);
+        const offset = (page - 1) * limit;
+        const { count, rows: campaigns } = await Campaign.findAndCountAll({
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
+        });
+
+        // If no campaigns found, return empty array with success message
+        if (campaigns.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No campaigns found",
+                data: [],
+                totalItems: 0,
+                totalPages: 0,
+                currentPage: page,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: campaigns,
+            totalItems: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Failed to fetch campaigns", error: error.message });
     }
@@ -113,7 +150,7 @@ const singleCampaign = async (req, res) => {
         const campaign = await Campaign.findByPk(id);
 
         if (!campaign) {
-            return res.status(404).json({ success: false, message: "Campaign not found"});
+            return res.status(404).json({ success: false, message: "Campaign not found" });
         }
         return res.status(200).json({ success: true, data: campaign });
 
@@ -132,8 +169,8 @@ const searchCampaigns = async (req, res) => {
         const campaigns = await Campaign.findAll({
             where: {
                 [Op.or]: [
-                    {title: { [Op.like]: `%${q}%` }},
-                    {description: { [Op.like]: `%${q}%` }}
+                    { title: { [Op.like]: `%${q}%` } },
+                    { description: { [Op.like]: `%${q}%` } }
                 ]
             }
         });

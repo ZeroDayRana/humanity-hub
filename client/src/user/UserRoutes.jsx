@@ -11,6 +11,7 @@ import SignupPage from './pages/SignupPage'
 import CreateCampaignPage from './pages/CreateCampaignPage';
 import CheckoutPage from './pages/CheckoutPage';
 import PaymentStatus from './components/PaymentStatus';
+import UnauthorizedPage from './pages/UnauthorizedPage';
 
 function UserRoutes() {
     // Search state
@@ -28,6 +29,7 @@ function UserRoutes() {
                 <Route path="/create-campaign" element={<CreateCampaignPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/payment-status/:orderId" element={<PaymentStatus />} />
+                <Route path="/unauthorized" element={<UnauthorizedPage />} />
             </Routes>
             <Footer />
         </div>

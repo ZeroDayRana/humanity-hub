@@ -6,6 +6,8 @@ import UsersPage from './pages/UsersPage'
 import CampaignsPage from './pages/CampaignsPage'
 import TransactionsPage from './pages/TransactionsPage'
 
+
+
 function AdminRoutes() {
     // Search state
     const [search, setSearch] = useState("");
@@ -13,7 +15,7 @@ function AdminRoutes() {
         <div>
             <AdminLayout>
                 <Routes>
-                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route index element={<DashboardPage />} />
                     <Route path="/users" element={<UsersPage />} />
                     <Route path="/campaigns" element={<CampaignsPage />} />
                     <Route path="/transactions" element={<TransactionsPage />} />

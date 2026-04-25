@@ -41,6 +41,7 @@ const CreateCampaignPage = () => {
       alert("Campaign created successfully");
     } catch (error) {
       console.error("Error creating campaign:", error);
+      console.error(err);
       alert("Error creating campaign");
     }
   }

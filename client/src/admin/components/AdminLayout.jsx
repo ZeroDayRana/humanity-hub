@@ -1,7 +1,16 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, Navigate } from "react-router-dom";
 import ThemeToggle from "../../theme/ThemeToggle";
+import { UserContext } from "../../context/UserContext";
+import { useContext } from "react";
 
 const AdminLayout = ({ children }) => {
+    const { user } = useContext(UserContext);
+    
+    if (!user) return <Navigate to="/login" />;
+
+    if (user.role !== "admin" && user.role !== "superadmin") {
+        return <Navigate to="/unauthorized" />;
+    }
     return (
         <div className="flex">
 
@@ -14,7 +23,8 @@ const AdminLayout = ({ children }) => {
 
                     <li>
                         <NavLink
-                            to="/admin/dashboard"
+                            to="/admin"
+                            end
                             className={({ isActive }) =>
                                 `block p-2 rounded ${isActive ? "bg-white text-black" : "hover:bg-gray-800"
                                 }`
