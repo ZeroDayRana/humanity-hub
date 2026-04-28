@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
-import { useContext } from "react";
-import { CampaignContext } from "../../context/CampaignContext";
+import { useCampaign } from "../../context/CampaignContext";
 import axios from "axios";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const CampaignsPage = () => {
-    const { campaigns, setCampaigns } = useContext(CampaignContext);
+    const { campaigns, setCampaigns } = useCampaign();
     const [search, setSearch] = useState("");
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState({ title: "", description: "", goal: "" });

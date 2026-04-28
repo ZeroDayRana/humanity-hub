@@ -21,7 +21,7 @@ function UserRoutes() {
             <Navbar search={search} setSearch={setSearch} />
             <Routes>
                 <Route path="/" element={<HomePage search={search} />} />
-                <Route path="/donate" element={<DonatePage search={search} />} />
+                <Route path="/donate" element={<DonatePage search={search} setSearch={setSearch} />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 
+
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 const CreateCampaignPage = () => {
   const navigate = useNavigate();
@@ -12,6 +13,11 @@ const CreateCampaignPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please log in to create a campaign");
+        return;
+      }
       // ✅ Create FormData (required for file upload)
       const formData = new FormData();
 
@@ -24,6 +30,7 @@ const CreateCampaignPage = () => {
       // ✅ Send to backend
       const response = await axios.post(`${SERVER_URL}/api/campaigns`, formData, {
         headers: {
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "multipart/form-data", // important for file upload
         },
       });
@@ -34,8 +41,8 @@ const CreateCampaignPage = () => {
       setGoal("");
       setImage(null);
 
-      // ✅ Navigate to campaigns page
-      navigate("/campaigns");
+      // ✅ Navigate to donate page after campaign creation
+      navigate("/donate");
 
       // ✅ Alert success
       alert("Campaign created successfully");

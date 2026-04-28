@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect, useContext, use } from 'react'
 import { FaArrowRight } from "react-icons/fa";
 import CampaignCard from '../components/CampaignCard'
-import { CampaignContext } from "../../context/CampaignContext";
 import Pagination from '../components/Pagination'
 import { useNavigate } from 'react-router-dom'
 import useDebounce from '../../hooks/useDebounce';
@@ -9,8 +8,8 @@ import axios from 'axios';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
-const DonatePage = ({ search }) => {
-  const { campaigns, setCampaigns } = useContext(CampaignContext);
+const DonatePage = ({ search, setSearch }) => {
+  const [ campaigns, setCampaigns ] = useState([]);
 
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const paymentSectionRef = useRef(null);
@@ -88,6 +87,12 @@ const DonatePage = ({ search }) => {
     fetchData();
   }, [debouncedSearch]);
 
+  useEffect(() => {
+    if (!debouncedSearch.trim()) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearch]);
+
   // // By newest campaigns
   // const trendingCampaigns = allCampaigns
   // .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -112,7 +117,14 @@ const DonatePage = ({ search }) => {
       {/* Campaign Cards */}
       < section className="max-w-7xl mx-auto py-12 px-4" >
         <div className="flex justify-between items-center mb-6">
-          <button className="flex items-center gap-2 text-blue-600 ml-auto">
+          <button
+            className="flex items-center gap-2 text-blue-600 ml-auto"
+            onClick={() => {
+              if (setSearch) setSearch("");
+              setSearchResults([]);
+              setCurrentPage(1);
+            }}
+          >
             View All <FaArrowRight />
           </button>
         </div>

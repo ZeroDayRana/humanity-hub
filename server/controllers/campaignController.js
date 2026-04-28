@@ -110,38 +110,48 @@ const deleteCampaign = async (req, res) => {
 // api/campaigns?page=1&limit=6
 const allCampaigns = async (req, res) => {
     try {
-        const page = parseInt(req.query.page || 1);
-        const limit = parseInt(req.query.limit || 6);
-        const offset = (page - 1) * limit;
-        const { count, rows: campaigns } = await Campaign.findAndCountAll({
-            order: [['createdAt', 'DESC']],
-            limit,
-            offset
-        });
+        const { page, limit } = req.query;
 
-        // If no campaigns found, return empty array with success message
-        if (campaigns.length === 0) {
+        // ✅ If NO pagination params → return ALL
+        if (!page && !limit) {
+            const campaigns = await Campaign.findAll({
+                order: [['createdAt', 'DESC']]
+            });
+
             return res.status(200).json({
                 success: true,
-                message: "No campaigns found",
-                data: [],
-                totalItems: 0,
-                totalPages: 0,
-                currentPage: page,
+                data: campaigns
             });
         }
+
+        // ✅ Else → pagination
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 6;
+
+        const offset = (pageNum - 1) * limitNum;
+
+        const { count, rows: campaigns } = await Campaign.findAndCountAll({
+            order: [['createdAt', 'DESC']],
+            limit: limitNum,
+            offset
+        });
 
         return res.status(200).json({
             success: true,
             data: campaigns,
             totalItems: count,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
+            totalPages: Math.ceil(count / limitNum),
+            currentPage: pageNum,
         });
+
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Failed to fetch campaigns", error: error.message });
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch campaigns",
+            error: error.message
+        });
     }
-}
+};
 
 const singleCampaign = async (req, res) => {
     try {
