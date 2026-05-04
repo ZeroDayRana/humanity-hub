@@ -3,6 +3,7 @@ import { FaHeart } from "react-icons/fa";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { Link, NavLink } from 'react-router-dom';
 import ProfileSideBar from './ProfileSideBar'
+import CampaignCategories from './CampaignCategories'
 import { UserContext } from '../../context/UserContext';
 import ThemeToggle from "../../theme/ThemeToggle";
 
@@ -47,7 +48,22 @@ const Navbar = ({ search, setSearch }) => {
           {/* Nav */}
           <nav className="flex gap-6 items-center">
             <ThemeToggle />
-            <NavLink to="/donate" className="hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400">Donate</NavLink>
+            {/* Donate with Mega Menu */}
+            <div className="relative group">
+              <NavLink
+                to="/explore-campaigns"
+                className="hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400"
+              >
+                Donate
+              </NavLink>
+
+              {/* Mega Menu */}
+              <div className="absolute hidden group-hover:block left-1/2 -translate-x-[60%] top-full w-125 md:w-175 lg:w-225 ">
+                <CampaignCategories />
+              </div>
+            </div>
+
+
             <NavLink to="/create-campaign" className="hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400">Create Campaign</NavLink>
 
             {/* Only show Admin link if user is admin or superadmin */}

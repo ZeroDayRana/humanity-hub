@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
+import ExploreCampaignsPage from './pages/ExploreCampaignsPage';
 import DonatePage from './pages/DonatePage';
 import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -21,7 +22,8 @@ function UserRoutes() {
             <Navbar search={search} setSearch={setSearch} />
             <Routes>
                 <Route path="/" element={<HomePage search={search} />} />
-                <Route path="/donate" element={<DonatePage search={search} setSearch={setSearch} />} />
+                <Route path="/explore-campaigns" element={<ExploreCampaignsPage search={search} setSearch={setSearch} />} />
+                <Route path="/donate" element={<DonatePage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />

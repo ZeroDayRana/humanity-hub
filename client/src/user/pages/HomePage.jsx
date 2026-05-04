@@ -6,12 +6,14 @@ import CampaignCard from '../components/CampaignCard'
 import { CampaignContext } from "../../context/CampaignContext";
 import axios from 'axios';
 import useDebounce from '../../hooks/useDebounce';
+import { useNavigate } from 'react-router-dom'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const HomePage = ({ search }) => {
     const { campaigns } = useContext(CampaignContext);
     const [results, setResults] = useState([]);
+    const navigate = useNavigate();
 
     // Use debounce for search input to avoid excessive API calls with the help of useDebounce custom hook
     const debouncedSearch = useDebounce(search, 1000);
@@ -36,6 +38,13 @@ const HomePage = ({ search }) => {
         fetchData();
     }, [debouncedSearch]);
 
+    const handleDonateClick = (campaign) => {
+        // navigate to donate page
+        navigate("/donate", { state: { campaign } });
+        ;
+    }
+
+
     const currentCampaigns = campaigns.slice(0, 3);
 
     return (
@@ -48,11 +57,11 @@ const HomePage = ({ search }) => {
                 <div className="grid md:grid-cols-3 gap-8">
                     {results.length > 0 ? (
                         results.map(campaign => (
-                            <CampaignCard key={campaign.id} campaign={campaign} />
+                            <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
                         ))
                     ) : (
                         currentCampaigns.map(campaign => (
-                            <CampaignCard key={campaign.id} campaign={campaign} />
+                            <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
                         ))
                     )}
                 </div>
