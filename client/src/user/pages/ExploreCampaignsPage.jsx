@@ -2,29 +2,24 @@ import { useState, useEffect, useContext } from 'react'
 import { FaArrowRight } from "react-icons/fa";
 import CampaignCard from '../components/CampaignCard'
 import Pagination from '../components/Pagination'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import useDebounce from '../../hooks/useDebounce';
 import axios from 'axios';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const ExploreCampaignsPage = ({ search, setSearch }) => {
-    const [campaigns, setCampaigns] = useState([]);
-
     const navigate = useNavigate();
 
+    // Get category and subCategory from URL search params
+    const [searchParams] = useSearchParams();
+    const category = searchParams.get('category');
+    const subCategory = searchParams.get('subCategory');
+
+    const [campaigns, setCampaigns] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const itemsPerPage = 6;
-
-    // ------------------------------------------------------------------------------------------
-    // Pagination Logic when only client side pagination is used
-    // const indexOfLastItem = currentPage * itemsPerPage;
-    // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-
-    // const currentCampaigns = campaigns.slice(indexOfFirstItem, indexOfLastItem);
-    // const totalPages = Math.ceil(campaigns.length / itemsPerPage);
-    // ------------------------------------------------------------------------------------------
 
     // Search results state
     const [searchResults, setSearchResults] = useState([]);
@@ -36,7 +31,7 @@ const ExploreCampaignsPage = ({ search, setSearch }) => {
     useEffect(() => {
         const fetchCampaigns = async () => {
             try {
-                const res = await axios.get(`${SERVER_URL}/api/campaigns?page=${currentPage}&limit=${itemsPerPage}`);
+                const res = await axios.get(`${SERVER_URL}/api/campaigns?category=${encodeURIComponent(category)}&subCategory=${encodeURIComponent(subCategory)}&page=${currentPage}&limit=${itemsPerPage}`);
 
                 const totalPages = res.data.totalPages;
 
@@ -63,7 +58,7 @@ const ExploreCampaignsPage = ({ search, setSearch }) => {
             }
         };
         fetchCampaigns();
-    }, [currentPage]);
+    }, [category, subCategory,currentPage]);
 
     // Fetch search results when search query changes
     useEffect(() => {
@@ -106,6 +101,11 @@ const ExploreCampaignsPage = ({ search, setSearch }) => {
         <div className="min-h-screen bg-gray-50 py-10 px-4 md:px-20 mt-20">
             <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">
                 Explore Campaigns
+                {category && (
+                    <span className="text-gray-500 text-lg ml-2">
+                        - {category} {subCategory ? `> ${subCategory}` : ""}
+                    </span>
+                )}
             </h1>
 
             {/* Campaign Cards */}

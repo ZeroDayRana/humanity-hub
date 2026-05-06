@@ -50,15 +50,15 @@ const Navbar = ({ search, setSearch }) => {
             <ThemeToggle />
             {/* Donate with Mega Menu */}
             <div className="relative group">
-              <NavLink
+              <span
                 to="/explore-campaigns"
                 className="hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400"
               >
                 Donate
-              </NavLink>
+              </span>
 
               {/* Mega Menu */}
-              <div className="absolute hidden group-hover:block left-1/2 -translate-x-[60%] top-full w-125 md:w-175 lg:w-225 ">
+              <div className="absolute hidden group-hover:block left-1/2 -translate-x-[60%] pt-4 w-125 md:w-175 lg:w-225 ">
                 <CampaignCategories />
               </div>
             </div>

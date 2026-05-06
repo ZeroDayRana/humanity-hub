@@ -7,6 +7,20 @@ const Campaign = sequelize.define('Campaign', {
     autoIncrement: true,
     primaryKey: true
   },
+  category: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true
+    }
+  },
+  subCategory: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true
+    }
+  },
 
   title: {
     type: DataTypes.STRING,

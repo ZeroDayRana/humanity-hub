@@ -9,7 +9,12 @@ const CampaignCategories = () => {
                 {categories.map((category) => (
                     <div key={category.title} className="text-center">
                         <h4 className="font-semibold text-gray-800 mb-3 text-lg">
-                            {category.title}
+                            <Link
+                                to={`/explore-campaigns?category=${encodeURIComponent(category.title)}`}
+                                className="text-gray-600 hover:text-indigo-600 transition"
+                            >
+                                {category.title}
+                            </Link>
                         </h4>
 
 
@@ -17,7 +22,7 @@ const CampaignCategories = () => {
                             {category.items.map((item) => (
                                 <li key={item}>
                                     <Link
-                                        to={`/explore-campaigns?category=${encodeURIComponent(item)}`}
+                                        to={`/explore-campaigns?category=${encodeURIComponent(category.title)}&subCategory=${encodeURIComponent(item)}`}
                                         className="text-gray-600 hover:text-indigo-600 transition"
                                     >
                                         {item}

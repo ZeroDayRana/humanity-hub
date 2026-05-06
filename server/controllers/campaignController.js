@@ -58,7 +58,7 @@ const updateCampaign = async (req, res) => {
         // Handle image upload
         if (req.file) {
             // delete old image if image path  exists in db and file exists in server storage
-            if (campaign.image  && fs.existsSync(campaign.image)) {
+            if (campaign.image && fs.existsSync(campaign.image)) {
                 fs.unlinkSync(campaign.image);
             }
             // save new image path
@@ -78,7 +78,7 @@ const deleteCampaign = async (req, res) => {
     try {
         const campaign = req.campaign; // already available
 
-       // Delete image safely
+        // Delete image safely
         if (campaign.image && fs.existsSync(campaign.image)) {
             fs.unlinkSync(campaign.image);
         }
@@ -94,27 +94,24 @@ const deleteCampaign = async (req, res) => {
 
 // For User
 
-// ------------------------------------------------------------------------------------------
-// Use when pagination is handlent in client side
-// const allCampaigns = async (req, res) => {
-//     try {
-//         const campaigns = await Campaign.findAll({ order: [['createdAt', 'DESC']] });
-//         return res.status(200).json({ success: true, data: campaigns });
-//     } catch (error) {
-//         return res.status(500).json({ success: false, message: "Failed to fetch campaigns", error: error.message });
-//     }
-// }
-// ------------------------------------------------------------------------------------------
-
-// Use when pagination is handled in server side
-// api/campaigns?page=1&limit=6
 const allCampaigns = async (req, res) => {
     try {
-        const { page, limit } = req.query;
+        const { category, subCategory, page, limit } = req.query;
+
+         // 🔍 Build dynamic filter
+        const filter = {};
+
+        if (category  && category !== "null") {
+            filter.category = category;
+        }
+        if (subCategory  && subCategory !== "null") {
+            filter.subCategory = subCategory;
+        }
 
         // ✅ If NO pagination params → return ALL
         if (!page && !limit) {
             const campaigns = await Campaign.findAll({
+                where: filter, // empty {} = no filter (returns all)
                 order: [['createdAt', 'DESC']]
             });
 
@@ -131,6 +128,7 @@ const allCampaigns = async (req, res) => {
         const offset = (pageNum - 1) * limitNum;
 
         const { count, rows: campaigns } = await Campaign.findAndCountAll({
+            where: filter,
             order: [['createdAt', 'DESC']],
             limit: limitNum,
             offset

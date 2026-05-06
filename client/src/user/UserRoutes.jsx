@@ -1,18 +1,18 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Routes, Route } from "react-router-dom";
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
-import ExploreCampaignsPage from './pages/ExploreCampaignsPage';
-import DonatePage from './pages/DonatePage';
-import LoginPage from './pages/LoginPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import SignupPage from './pages/SignupPage'
-import CreateCampaignPage from './pages/CreateCampaignPage';
-import CheckoutPage from './pages/CheckoutPage';
-import PaymentStatus from './components/PaymentStatus';
-import UnauthorizedPage from './pages/UnauthorizedPage';
+const ExploreCampaignsPage = lazy(() => import('./pages/ExploreCampaignsPage')); // Lazy load ExploreCampaignsPage
+const DonatePage = lazy(() => import('./pages/DonatePage')); // Lazy load DonatePage
+const LoginPage = lazy(() => import('./pages/LoginPage')); // Lazy load LoginPage
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage')); // Lazy load ForgotPasswordPage
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const CreateCampaignPage = lazy(() => import('./pages/CreateCampaignPage')); // Lazy load CreateCampaignPage
+const SignupPage = lazy(() => import('./pages/SignupPage')); // Lazy load SignupPage
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage')); // Lazy load CheckoutPage
+const PaymentStatusPage = lazy(() => import('./pages/PaymentStatusPage')); // Lazy load PaymentStatus
+const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage')); // Lazy load UnauthorizedPage
 
 function UserRoutes() {
     // Search state
@@ -20,19 +20,26 @@ function UserRoutes() {
     return (
         <div>
             <Navbar search={search} setSearch={setSearch} />
-            <Routes>
-                <Route path="/" element={<HomePage search={search} />} />
-                <Route path="/explore-campaigns" element={<ExploreCampaignsPage search={search} setSearch={setSearch} />} />
-                <Route path="/donate" element={<DonatePage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-                <Route path="/create-campaign" element={<CreateCampaignPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/payment-status/:orderId" element={<PaymentStatus />} />
-                <Route path="/unauthorized" element={<UnauthorizedPage />} />
-            </Routes>
+            <Suspense fallback={<div>Loading...</div>}>
+                <Routes>
+                    <Route path="/" element={<HomePage search={search} />} />
+
+                    <Route path="/explore-campaigns" element={<ExploreCampaignsPage search={search} setSearch={setSearch} />} />
+
+                    <Route path="/donate" element={<DonatePage />} />
+
+                    <Route path="/signup" element={<SignupPage />} />   
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+
+                    <Route path="/create-campaign" element={<CreateCampaignPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+
+                    <Route path="/payment-status/:orderId" element={<PaymentStatusPage />} />
+                    <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                </Routes>
+            </Suspense>
             <Footer />
         </div>
     )
