@@ -1,15 +1,22 @@
 import { useState } from 'react'
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import categories from "../../data/campaign-categories.data";
 
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 const CreateCampaignPage = () => {
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [goal, setGoal] = useState("");
   const [image, setImage] = useState(null);
+
+  // Find subcategories of selected category
+  const subCategories = categories.find((cat) => cat.title === selectedCategory)?.items || [];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -22,6 +29,8 @@ const CreateCampaignPage = () => {
       const formData = new FormData();
 
       // ✅ Append all fields to FormData
+      formData.append("category", selectedCategory);
+      formData.append("subCategory", selectedSubCategory);
       formData.append("title", title);
       formData.append("description", description);
       formData.append("goal", goal);
@@ -42,7 +51,7 @@ const CreateCampaignPage = () => {
       setImage(null);
 
       // ✅ Navigate to donate page after campaign creation
-      navigate("/donate");
+      navigate(`/explore-campaigns?category=${encodeURIComponent(selectedCategory)}&subCategory=${encodeURIComponent(selectedSubCategory)}`);
 
       // ✅ Alert success
       alert("Campaign created successfully");
@@ -60,6 +69,50 @@ const CreateCampaignPage = () => {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Category Select */}
+            <div>
+              <label className="block mb-1 font-medium">Category</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setSelectedSubCategory(""); // Reset subcategory when category changes
+                }}
+                className="w-full border rounded-lg p-2"
+                required
+              >
+                <option value="">Select Campaign Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.title} value={cat.title}>
+                    {cat.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* SubCategory Select */}
+            <div>
+              <label className="block mb-1 font-medium">Sub-Category</label>
+              <select
+                value={selectedSubCategory}
+                onChange={(e) => setSelectedSubCategory(e.target.value)}
+                className="w-full border rounded-lg p-2"
+                required
+              >
+                <option value="">Select Campaign Sub-Category</option>
+
+                {/* Show only related subcategories */}
+                {subCategories.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
             <label className="block mb-1 font-medium">Campaign Title</label>
             <input
@@ -128,23 +181,25 @@ const CreateCampaignPage = () => {
             </label>
           </div>
 
-    <button
+          <button
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
             Launch Campaign
           </button>
-      </form>
+        </form>
 
-      {title && (
-        <div className="mt-10 p-6 border rounded-xl bg-gray-50">
-          <h2 className="text-2xl font-semibold">Preview</h2>
-          <p className="mt-2 font-bold">{title}</p>
-          <p className="mt-2 text-gray-600">{description}</p>
-          <p className="mt-2 text-green-600 font-semibold">
-            Goal: ₹{goal === "" ? "0" : goal}
-          </p>
-        </div>
-      )}
+        {title && (
+          <div className="mt-10 p-6 border rounded-xl bg-gray-50">
+            <h2 className="text-2xl font-semibold">Preview</h2>
+            <hr className="my-4" />
+            <p className="text-sm text-gray-500">Category: {selectedCategory} {selectedSubCategory? `/ ${selectedSubCategory}` : ""}</p>
+            <p className="mt-2 font-bold">{title}</p>
+            <p className="mt-2 text-gray-600">{description}</p>
+            <p className="mt-2 text-green-600 font-semibold">
+              Goal: ₹{goal === "" ? "0" : goal}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

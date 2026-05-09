@@ -6,10 +6,10 @@ const path = require("path");
 // For Admin/SuperAdmin
 const newCampaign = async (req, res) => {
     try {
-        const { title, description, goal, image } = req.body;
+        const { category, subCategory, title, description, goal, image } = req.body;
 
         // Validation
-        if (!title || !description || !goal) {
+        if (!category || !subCategory || !title || !description || !goal) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
 
@@ -21,7 +21,7 @@ const newCampaign = async (req, res) => {
         const imagePath = req.file ? req.file.path : null; // multer से image path मिलेगा
 
         // Create new campaign
-        const campaign = await Campaign.create({ title, description, goal, image: imagePath });
+        const campaign = await Campaign.create({ category, subCategory, title, description, goal, image: imagePath });
 
         console.log("Saved:", campaign);
         res.status(201).json({ success: true, message: "Campaign created successfully", data: campaign });
@@ -37,7 +37,7 @@ const updateCampaign = async (req, res) => {
         const campaign = req.campaign; // already available
 
         // Check if update data is valid
-        const allowedFields = ["title", "description", "goal", "image"];
+        const allowedFields = ["category", "subCategory", "title", "description", "goal", "image"];
         const updates = Object.keys(updateData);
         const isValid = updates.every((field) => allowedFields.includes(field)); // returns true or false
         if (!isValid) {
