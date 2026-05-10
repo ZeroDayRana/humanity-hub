@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { Op } = require("sequelize");
 const sequelize = require('../config/db');
 const crypto = require("crypto");
-// const { sendResetEmail } = require('../services/nodemailerService');
+// const { sendForgotPasswordMail } = require('../services/emailService');
 
 // For User
 const registerUser = async (req, res) => {
@@ -177,12 +177,16 @@ const forgotPassword = async (req, res) => {
 
         const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`;
 
-        // send email (nodemailer)
+        // SEND MAIL WITH RESET LINK
         // console.log(resetLink);
         // 👉 CALL EMAIL FUNCTION HERE
-        // await sendResetEmail(user.email, token);
+        // await sendForgotPasswordMail(user.email, resetLink);
 
-        // res.json({ message: "Reset link sent" });
+        // return res.status(200).json({
+        //     success: true,
+        //     message: "Password reset link sent"
+        // });
+
         return res.status(200).json({ success: true, message: "Reset link sent", link: resetLink });
     } catch (error) {
         console.error("Forgot Password Error:", error);
