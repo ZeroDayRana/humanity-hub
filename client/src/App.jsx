@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import './App.css'
 import { UserProvider } from './context/UserContext';
 import { CampaignProvider } from './context/CampaignContext';
-import { DonationProvider } from "./context/donationContext";
+import { DonationProvider } from "./context/DonationContext";
 import UserRoutes from './user/UserRoutes';
 import AdminRoutes from './admin/AdminRoutes';
 

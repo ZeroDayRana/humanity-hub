@@ -2,7 +2,7 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 const CampaignCard = ({campaign, onDonateClick = () => {}, showDonateButton = true }) => {
   return (
     <div key={campaign.id} className="bg-white rounded-2xl shadow hover:shadow-lg transition">
-      <img src={`${SERVER_URL}/${campaign.image}`} className="rounded-t-2xl" alt="campaign pic"/>
+      <img src={`${SERVER_URL}/${campaign.image}`} className="w-full h-80 object-cover rounded-t-2xl" alt="campaign pic"/>
       <div className="p-4">
         <h3 className="font-semibold text-lg mb-2">{campaign.title}</h3>
 

@@ -24,7 +24,7 @@ app.use("/api/donations", donationRoutes);
 app.use("/api/admin", require("./routes/adminRoutes")); // Admin routes
 
 sequelize.sync().then(() => {
-    console.log("✅ Database synced (alter mode)");
+    console.log("✅ Database synced");
     app.listen(port, () => console.log(`Server running on port ${port}`));
 })
 .catch((err) => {

@@ -6,7 +6,13 @@ const sequelize = new Sequelize(
     process.env.DB_PASSWORD,
     {
         host: process.env.DB_HOST,
-        dialect: 'mysql'
+        dialect: 'mysql',
+        port: process.env.DB_PORT || 3306, // Good practice to include the port variable
+        dialectOptions: {
+            ssl: {
+                rejectUnauthorized: false // Required for serverless platforms like Vercel to connect securely to Aiven
+            }
+        }
     }
 );
 
