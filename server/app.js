@@ -10,7 +10,13 @@ const sequelize = require("./config/db");
 const port = 3000;
 const app = express();
 
-app.use(cors());
+// origin used for vercel deployment
+app.use(
+  cors({
+    origin: "https://humanity-hub-charity.vercel.app",
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
