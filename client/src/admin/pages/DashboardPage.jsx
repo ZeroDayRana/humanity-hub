@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCampaign } from "../../context/CampaignContext";
-import { useDonation } from "../../context/donationContext";
+import { useDonation } from "../../context/DonationContext";
 import axios from "axios";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
