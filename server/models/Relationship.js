@@ -4,20 +4,43 @@ const Donation = require('./Donation');
 
 // Relationships
 
-// User creates campaigns
-User.hasMany(Campaign, { foreignKey: "userId" });
-Campaign.belongsTo(User, { foreignKey: "userId" });
+// User → Campaign
+User.hasMany(Campaign, {
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE"
+});
 
-// Campaign receives donations
-Campaign.hasMany(Donation, { foreignKey: "campaignId" });
-Donation.belongsTo(Campaign, { foreignKey: "campaignId" });
+Campaign.belongsTo(User, {
+    foreignKey: "userId"
+});
 
-// User makes donations
-User.hasMany(Donation, { foreignKey: "userId" });
-Donation.belongsTo(User, { foreignKey: "userId" });
+
+// User → Donation
+User.hasMany(Donation, {
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE"
+});
+
+Donation.belongsTo(User, {
+    foreignKey: "userId"
+});
+
+
+// Campaign → Donation
+Campaign.hasMany(Donation, {
+    foreignKey: "campaignId",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE"
+});
+
+Donation.belongsTo(Campaign, {
+    foreignKey: "campaignId"
+});
 
 module.exports = {
     User,
-    Campaign,  
+    Campaign,
     Donation
 }; 

@@ -6,7 +6,7 @@ const path = require("path");
 // For Admin/SuperAdmin
 const newCampaign = async (req, res) => {
     try {
-        const { category, subCategory, title, description, goal, image } = req.body;
+        const { category, subCategory, title, description, goal } = req.body;
 
         // Validation
         if (!category || !subCategory || !title || !description || !goal) {
@@ -18,10 +18,14 @@ const newCampaign = async (req, res) => {
         }
 
         // Handle image upload
-        const imagePath = req.file ? req.file.path : null; // multer से image path मिलेगा
+        // const imagePath = req.file ? req.file.path : null; // multer से image path मिलेगा
+
+        // for cloudinary
+        const imageUrl = req.file ? req.file.path : null;
+        const imageId = req.file ? req.file.filename : null;
 
         // Create new campaign
-        const campaign = await Campaign.create({ category, subCategory, title, description, goal, image: imagePath });
+        const campaign = await Campaign.create({ category, subCategory, title, description, goal, image: imageUrl, cloudinary_id: imageId });
 
         console.log("Saved:", campaign);
         res.status(201).json({ success: true, message: "Campaign created successfully", data: campaign });
@@ -36,8 +40,15 @@ const updateCampaign = async (req, res) => {
         const updateData = req.body; //new data from user
         const campaign = req.campaign; // already available
 
+        if (!campaign) {
+            return res.status(404).json({
+                success: false,
+                message: "Campaign not found"
+            });
+        }
+
         // Check if update data is valid
-        const allowedFields = ["category", "subCategory", "title", "description", "goal", "image"];
+        const allowedFields = ["category", "subCategory", "title", "description", "goal"];
         const updates = Object.keys(updateData);
         const isValid = updates.every((field) => allowedFields.includes(field)); // returns true or false
         if (!isValid) {
@@ -55,20 +66,35 @@ const updateCampaign = async (req, res) => {
                 message: "No fields provided for update",
             });
         }
+
         // Handle image upload
+        // if (req.file) {
+
+        //     // delete old image if image path  exists in db and file exists in server storage
+        //     if (campaign.image && fs.existsSync(campaign.image)) {
+        //         fs.unlinkSync(campaign.image);
+        //     }
+        //     // save new image path
+        //     updateData.image = req.file.path; // multer से image path मिलेगा
+        // }
+
+        // Handle new image upload (Cloudinary)
         if (req.file) {
-            // delete old image if image path  exists in db and file exists in server storage
-            if (campaign.image && fs.existsSync(campaign.image)) {
-                fs.unlinkSync(campaign.image);
+
+            // delete old image from cloudinary
+            if (campaign.cloudinary_id) {
+                await cloudinary.uploader.destroy(campaign.cloudinary_id);
             }
-            // save new image path
-            updateData.image = req.file.path; // multer से image path मिलेगा
+
+            // set new image
+            updateData.image = req.file.path;
+            updateData.cloudinary_id = req.file.filename; // or public_id depending config
         }
 
         // Update campaign to database
-        await campaign.update(updateData);
+        const updatedCampaign = await campaign.update(updateData);
 
-        return res.status(200).json({ success: true, message: "Campaign updated successfully", data: campaign });
+        return res.status(200).json({ success: true, message: "Campaign updated successfully", data: updatedCampaign });
     } catch (error) {
         res.status(500).json({ success: false, message: "Failed to update campaign", error: error.message, });
     }
@@ -78,9 +104,18 @@ const deleteCampaign = async (req, res) => {
     try {
         const campaign = req.campaign; // already available
 
+        if (!campaign) {
+            return res.status(404).json({ message: "Not found" });
+        }
+
         // Delete image safely
-        if (campaign.image && fs.existsSync(campaign.image)) {
-            fs.unlinkSync(campaign.image);
+        // if (campaign.image && fs.existsSync(campaign.image)) {
+        //     fs.unlinkSync(campaign.image);
+        // }
+
+        //  Delete image from Cloudinary
+        if (campaign.cloudinary_id) {
+            await cloudinary.uploader.destroy(campaign.cloudinary_id);
         }
 
         await Campaign.destroy({ where: { id: campaign.id } });
@@ -98,13 +133,13 @@ const allCampaigns = async (req, res) => {
     try {
         const { category, subCategory, page, limit } = req.query;
 
-         // 🔍 Build dynamic filter
+        // 🔍 Build dynamic filter
         const filter = {};
 
-        if (category  && category !== "null") {
+        if (category && category !== "null") {
             filter.category = category;
         }
-        if (subCategory  && subCategory !== "null") {
+        if (subCategory && subCategory !== "null") {
             filter.subCategory = subCategory;
         }
 
@@ -155,7 +190,16 @@ const singleCampaign = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const campaign = await Campaign.findByPk(id);
+        if (isNaN(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid campaign id"
+            });
+        }
+
+        const campaign = await Campaign.findByPk(id, {
+            include: [Donation, User]
+        });
 
         if (!campaign) {
             return res.status(404).json({ success: false, message: "Campaign not found" });

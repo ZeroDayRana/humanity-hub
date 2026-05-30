@@ -60,6 +60,10 @@ const Campaign = sequelize.define('Campaign', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  cloudinary_id:{
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
