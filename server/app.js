@@ -37,3 +37,4 @@ sequelize.sync().then(() => {
     console.error("Error syncing database:", err);
 });
 
+module.exports = app;
