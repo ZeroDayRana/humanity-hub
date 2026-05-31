@@ -7,7 +7,7 @@ const campaignRoutes = require("./routes/campaignRoutes");
 const donationRoutes = require("./routes/donationRoutes");
 const sequelize = require("./config/db");
 
-const port = 3000;
+// const port = 3000;
 const app = express();
 
 // origin used for vercel deployment
@@ -29,12 +29,17 @@ app.use("/api/campaigns", campaignRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/admin", require("./routes/adminRoutes")); // Admin routes
 
-sequelize.sync().then(() => {
-    console.log("✅ Database synced");
-    app.listen(port, () => console.log(`Server running on port ${port}`));
-})
-.catch((err) => {
-    console.error("Error syncing database:", err);
-});
+// sequelize.sync().then(() => {
+//   console.log("✅ Database synced");
+//   app.listen(port, () => console.log(`Server running on port ${port}`));
+// })
+//   .catch((err) => {
+//     console.error("Error syncing database:", err);
+//   });
+
+// ✅ No app.listen() for Vercel
+sequelize.sync()
+  .then(() => console.log("✅ Database synced"))
+  .catch(err => console.error("DB sync error:", err));
 
 module.exports = app;
