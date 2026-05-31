@@ -43,7 +43,9 @@ const Donation = sequelize.define('Donation', {
     defaultValue: 'pending' // pending, success, failed
   },
 }, {
-  timestamps: true // adds createdAt & updatedAt
+  timestamps: true, // adds createdAt & updatedAt
+  tableName: 'donations', // Tells Linux/Aiven exactly what lowercase table to find
+  freezeTableName: true   // Stops Sequelize from guessing or altering the name
 });
 
 module.exports = Donation;

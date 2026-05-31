@@ -69,7 +69,9 @@ const Campaign = sequelize.define('Campaign', {
     defaultValue: true,
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  tableName: 'campaigns', // Tells Linux/Aiven exactly what lowercase table to find
+  freezeTableName: true   // Stops Sequelize from guessing or altering the name
 });
 
 module.exports = Campaign;

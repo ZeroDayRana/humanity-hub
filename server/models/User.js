@@ -37,7 +37,9 @@ const User = sequelize.define('User', {
         defaultValue: 'active'
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    tableName: 'users', // Tells Linux/Aiven exactly what lowercase table to find
+    freezeTableName: true   // Stops Sequelize from guessing or altering the name
 });
 
 module.exports = User;
