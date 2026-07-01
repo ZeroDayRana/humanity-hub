@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { FaHeart } from "react-icons/fa";
-import { FaSearch, FaTimes } from "react-icons/fa";
+import { FaBars, FaSearch, FaTimes } from "react-icons/fa";
 import { Link, NavLink } from 'react-router-dom';
 import ProfileSideBar from './ProfileSideBar'
 import CampaignCategories from './CampaignCategories'
@@ -11,6 +11,8 @@ const Navbar = ({ search, setSearch }) => {
   const { user, campaigns, loadingUser, logout } = useContext(UserContext);
   const [showSearch, setShowSearch] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const openSidebar = () => {
     setIsSidebarOpen(true); // open
@@ -20,33 +22,39 @@ const Navbar = ({ search, setSearch }) => {
     setIsSidebarOpen(false); // close
   };
 
+  const toggleMobileSearch = () => {
+    setMobileMenuOpen(false);     // Close drawer
+    setMobileSearchOpen(prev => !prev); // Toggle search
+  };
+
   // Prevent body scroll
   useEffect(() => {
-    if (isSidebarOpen) {
+    if (isSidebarOpen || mobileMenuOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
+
     return () => {
-      document.body.style.overflow = "auto"; // cleanup
+      document.body.style.overflow = "auto";
     };
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen, mobileMenuOpen]);
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
       {/* HEADER */}
       <header className="bg-white dark:bg-gray-800 shadow-md fixed w-full top-0 z-50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
 
           {/* Logo */}
           <NavLink to="/">
-            <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-blue-600">
               <FaHeart /> HumanityHub
             </h1>
           </NavLink>
 
           {/* Nav */}
-          <nav className="flex gap-6 items-center">
+          <nav className="hidden lg:flex items-center gap-6">
             <ThemeToggle />
             {/* Donate with Mega Menu */}
             <div className="relative group">
@@ -108,8 +116,121 @@ const Navbar = ({ search, setSearch }) => {
               </Link>
             )}
           </nav>
+
+          <div className="flex items-center gap-4 lg:hidden">
+
+            <ThemeToggle />
+
+            <button
+              onClick={toggleMobileSearch}
+              className="text-xl"
+            >
+              {mobileSearchOpen ? <FaTimes /> : <FaSearch />}
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="text-2xl"
+            >
+              <FaBars />
+            </button>
+
+          </div>
+
         </div>
       </header>
+
+      {mobileSearchOpen && (
+        <div className="md:hidden fixed top-16 left-0 w-full bg-white dark:bg-gray-800 shadow-md z-40 px-4 py-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search campaigns..."
+            autoFocus
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-black dark:text-white"
+          />
+        </div>
+      )}
+
+      {mobileMenuOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer */}
+          <div
+            className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-800 z-50 shadow-xl p-6 flex flex-col gap-5"
+          >
+            <div className="flex justify-between items-center">
+
+              <h2 className="font-bold text-lg">
+                Menu
+              </h2>
+
+              <button onClick={() => setMobileMenuOpen(false)}>
+                <FaTimes size={22} />
+              </button>
+
+            </div>
+
+            <NavLink
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Home
+            </NavLink>
+
+            <NavLink
+              to="/explore-campaigns"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Donate
+            </NavLink>
+
+            <NavLink
+              to="/create-campaign"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Create Campaign
+            </NavLink>
+
+            {(user?.role === "admin" ||
+              user?.role === "superadmin") && (
+                <NavLink
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Admin Panel
+                </NavLink>
+              )}
+
+            {user ? (
+              <button
+                onClick={() => {
+                  openSidebar();
+                  setMobileMenuOpen(false);
+                }}
+                className="bg-blue-600 text-white rounded-lg py-2"
+              >
+                Profile
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <button className="w-full bg-blue-600 text-white rounded-lg py-2">
+                  Login
+                </button>
+              </Link>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Overlay for sidebar covers the whole screen under the sidebar */}
       {isSidebarOpen && (

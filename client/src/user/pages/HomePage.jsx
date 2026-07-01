@@ -48,26 +48,51 @@ const HomePage = ({ search }) => {
     const currentCampaigns = campaigns.slice(0, 3);
 
     return (
-        <div>
+        <div className="w-full overflow-x-hidden">
+
             <Hero />
+
             <Carousel />
+
             <Features />
-            {/* Campaign Cards */}
-            < section className="max-w-7xl mx-auto py-12 px-4" >
-                <div className="grid md:grid-cols-3 gap-8">
-                    {results.length > 0 ? (
-                        results.map(campaign => (
-                            <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
-                        ))
-                    ) : (
-                        currentCampaigns.map(campaign => (
-                            <CampaignCard key={campaign.id} campaign={campaign} onDonateClick={handleDonateClick} />
-                        ))
+
+            {/* Campaign Section */}
+            <section className="max-w-7xl mx-auto py-8 sm:py-10 md:py-12 px-4 sm:px-6 lg:px-8">
+
+                <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">
+                    {results.length > 0 ? "Search Results" : "Featured Campaigns"}
+                </h2>
+
+                <div
+                    className="
+                        grid
+                        grid-cols-1
+                        sm:grid-cols-2
+                        lg:grid-cols-3
+                        xl:grid-cols-3
+                        gap-6
+                        md:gap-8
+                    "
+                >
+                    {(results.length > 0 ? results : currentCampaigns).map(
+                        (campaign) => (
+                            <CampaignCard
+                                key={campaign.id}
+                                campaign={campaign}
+                                onDonateClick={handleDonateClick}
+                            />
+                        )
                     )}
                 </div>
-            </section >
+
+                {results.length > 0 && results.length === 0 && (
+                    <div className="text-center text-gray-500 mt-10">
+                        No campaigns found.
+                    </div>
+                )}
+            </section>
         </div>
-    )
+    );
 }
 
 export default HomePage
